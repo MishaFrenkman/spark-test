@@ -1,0 +1,31 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ CI_PROJECT_NAME }}-{{ TRACK|default('stable', true) }}
+ namespace: {{ CI_PROJECT_NAMESPACE }}-{{ CI_ENVIRONMENT_SLUG }}
+  labels:
+    app.kubernetes.io/name: {{ CI_PROJECT_NAME }}
+    app.kubernetes.io/version: {{ DOCKER_IMAGE_TAG }}
+    app.kubernetes.io/component: template
+    app.kubernetes.io/part-of: templates
+    app.kubernetes.io/managed-by: gitlab
+  annotations:
+    repo: {{ CI_PROJECT_URL }}
+spec:
+  template:
+    metadata:
+      labels:
+        track: {{ TRACK|default('stable', true) }}
+    spec:
+      tolerations:
+        - key: dedicated
+          value: big
+          effect: NoSchedule
+          operator: Equal
+      nodeSelector:
+        dedicated: big
+      containers:
+      - name: {{ CI_PROJECT_NAME }}
+        image: eu.gcr.io/{{ GCP_PROJECT_ID }}/{{ CI_PROJECT_NAMESPACE }}-{{ CI_PROJECT_NAME }}:{{ DOCKER_IMAGE_TAG }}
+      restartPolicy: Never
